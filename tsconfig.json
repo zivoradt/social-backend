@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2015",
+    "types": ["node", "express"],
     "module": "commonjs",
     "lib": ["DOM", "ES2015"],
     "baseUrl": ".",
@@ -19,16 +20,16 @@
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "resolveJsonModule": true,
-  "plugins": [
-    {"transform": "typescript-transform-paths"},
-    {"transform": "typescript-transform-paths", "afterDeclarations": true}
-  ],
-  "paths": {
-    "@global/*": ["src/shared/globals/*"],
-    "@services/*": ["src/shared/services/*"],
-    "@sockets/*": ["src/shared/sockets/*"],
-    "@workers/*": ["src/shared/workers/*"],
-    "@root/*": ["src/*"],
+    "plugins": [
+      {"transform": "typescript-transform-paths"},
+      {"transform": "typescript-transform-paths", "afterDeclarations": true}
+    ],
+    "paths": {
+      "@global/*": ["src/shared/globals/*"],
+      "@services/*": ["src/shared/services/*"],
+      "@sockets/*": ["src/shared/sockets/*"],
+      "@workers/*": ["src/shared/workers/*"],
+      "@root/*": ["src/*"]
+    }
   }
-}
 }
