@@ -8,7 +8,7 @@ class AuthService{
     const query = {
       $or: [{username: Helpers.firstLetterUppercase(username)}, {email: Helpers.toLowerCase(email)}]
     };
-    const user: IAuthDocument | null = await AuthModel.findOne(query).exec() as IAuthDocument;
+    const user: IAuthDocument = await AuthModel.findOne(query).exec() as IAuthDocument;
     return user;
   };
 };
