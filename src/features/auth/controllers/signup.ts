@@ -3,7 +3,6 @@ import { UploadApiResponse } from 'cloudinary';
 import { ObjectId } from 'mongodb';
 import { Request, Response, NextFunction } from 'express';
 import { joiValidation } from '@global/decorators/joi-validation.decorators';
-import { ObjectSchema } from 'joi';
 import { signupSchema } from '@auth/schemas/signup';
 import { IAuthDocument, ISignUpData } from '@auth/interfaces/auth.interface';
 import { authService } from '@services/db/auth.service';
@@ -12,6 +11,11 @@ import { Helpers } from '@global/helpers/helpers';
 import { uploads } from '@global/helpers/cloudinary-upload';
 import { IUserDocument } from '@user/interfaces/user.interface';
 import { UserCache } from '@services/redis/user.cache';
+import { omit } from 'lodash';
+import { authQueue } from '@services/queues/auth.queue';
+import { userQueue } from '@services/queues/user.queue';
+import JWT from 'jsonwebtoken';
+import { config } from '@root/config';
 
 
 // Cache instance
@@ -47,10 +51,29 @@ export class SignUp {
     // Add to redis cache
     const userDataToCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
     userDataToCache.profilePicture = `https://res.cloudinary.com/${process.env.CLOUD_NAME}/image/upload/v${result.version}/${userObjectId}`;
-
     await userCache.saveUserToCache(`${userObjectId}`, uId, userDataToCache);
 
-    res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', authData });
+    //Add to database
+    omit(userDataToCache, ['uId','username', 'avatarColor', 'email', 'password']);
+    authQueue.addAuthUserJob('addAuthUserJobToDB', {value: userDataToCache});
+    userQueue.addUserJob('addUserToDB', {value: userDataToCache});
+
+    const userJwt: string = SignUp.prototype.signToken(authData, userObjectId);
+    req.session = {jwt: userJwt};
+
+    res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', user: userDataToCache, token: userJwt });
+  }
+
+  private signToken(data: IAuthDocument, userObjectId: ObjectId): string{
+    return JWT.sign({
+      userId: userObjectId,
+      uId: data.uId,
+      email: data.email,
+      username: data.username,
+      avatarColor: data.avatarColor
+    },
+    config.JWT_TOKEN!
+    );
   }
 
 
