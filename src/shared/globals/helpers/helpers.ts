@@ -1,3 +1,8 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { IUserDocument } from '@user/interfaces/user.interface';
+import { forEach } from 'lodash';
 
 
 
@@ -24,4 +29,13 @@ export class Helpers{
     };
     return parseInt(result, 10);
   };
+
+  static parseJson(prop: string):any{
+    try {
+      JSON.parse(prop);
+    } catch (error) {
+      return prop;
+    }
+  };
+
 };

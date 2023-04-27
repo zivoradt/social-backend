@@ -1,4 +1,5 @@
 import { SignIn } from '@auth/controllers/signin';
+import { SignOut } from '@auth/controllers/signout';
 import { SignUp } from '@auth/controllers/signup';
 import express, {Router} from 'express';
 
@@ -16,6 +17,12 @@ class AuthRoutes {
 
     return this.router;
   }
+  public signOutRoute(): Router{
+    this.router.get('/signout', SignOut.prototype.update);
+
+    return this.router;
+  }
+
 };
 
 export const authRoutes: AuthRoutes = new AuthRoutes();

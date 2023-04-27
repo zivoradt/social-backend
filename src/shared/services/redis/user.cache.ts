@@ -7,6 +7,7 @@ import { config } from '@root/config';
 import { ServerError } from '@global/helpers/error-handler';
 import { IAuthDocument } from '@auth/interfaces/auth.interface';
 import { ObjectId } from 'mongoose';
+import { Helpers } from '@global/helpers/helpers';
 
 const log:Logger = config.createLogger('userCache');
 
@@ -65,7 +66,7 @@ export class UserCache extends BaseCache {
       `${profilePicture}`,
       'folowersCount',
       `${followersCount}`,
-      'folowinCount',
+      'folowingCount',
       `${followingCount}`,
       'notifications',
       JSON.stringify(notifications),
@@ -101,6 +102,33 @@ export class UserCache extends BaseCache {
       throw new ServerError('Server error. Try again.');
     }
 
+  }
+
+
+  public async getUserFromCache(key: string):Promise<IUserDocument | null>{
+    try {
+      if(!this.client.isOpen){
+        await this.client.connect();
+      }
+      // Return user from a cache
+      const response: IUserDocument = await this.client.HGETALL(`users:${key}`) as unknown as IUserDocument;
+      console.log(response);
+      // Apply parse JSON method to convert some properties from string to {}
+      response.createdAt = new Date(Helpers.parseJson(`${response.createdAt}`));
+      response.postsCount = Helpers.parseJson(`${response.postsCount}`);
+      response.blocked = Helpers.parseJson(`${response.blocked}`);
+      response.blockedBy = Helpers.parseJson(`${response.blockedBy}`);
+      response.quote = Helpers.parseJson(`${response.quote}`);
+      response.notifications = Helpers.parseJson(`${response.notifications}`);
+      response.social = Helpers.parseJson(`${response.social}`);
+      //response.followersCount = Helpers.parseJson(`${response.followersCount}`);
+      //response.followingCount = Helpers.parseJson(`${response.followingCount}`);
+
+      return response;
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error. Try again.');
+    }
   }
 
 }
