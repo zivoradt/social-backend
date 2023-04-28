@@ -9,7 +9,7 @@ import { IAuthDocument } from '@auth/interfaces/auth.interface';
 import { ObjectId } from 'mongoose';
 import { Helpers } from '@global/helpers/helpers';
 
-const log:Logger = config.createLogger('userCache');
+const log: Logger = config.createLogger('userCache');
 
 export class UserCache extends BaseCache {
   constructor() {
@@ -54,7 +54,7 @@ export class UserCache extends BaseCache {
       'createdAt',
       `${createdAt}`,
       'postsCount',
-      `${postsCount}`,
+      `${postsCount}`
     ];
 
     const secondList: string[] = [
@@ -71,7 +71,7 @@ export class UserCache extends BaseCache {
       'notifications',
       JSON.stringify(notifications),
       'social',
-      JSON.stringify(social),
+      JSON.stringify(social)
     ];
 
     const thirdList: string[] = [
@@ -86,32 +86,30 @@ export class UserCache extends BaseCache {
       'bgImageVersion',
       `${bgImageVersion}`,
       'bgImageId',
-      `${bgImageId}`,
+      `${bgImageId}`
     ];
     const dataToSave: string[] = [...firstList, ...secondList, ...thirdList];
 
     try {
-      if(!this.client.isOpen){
+      if (!this.client.isOpen) {
         await this.client.connect();
       }
 
-      await this.client.ZADD('user', {score: parseInt(userUId, 10), value: `${key}`});
+      await this.client.ZADD('user', { score: parseInt(userUId, 10), value: `${key}` });
       await this.client.HSET(`users:${key}`, dataToSave);
     } catch (error) {
       log.error(error);
       throw new ServerError('Server error. Try again.');
     }
-
   }
 
-
-  public async getUserFromCache(key: string):Promise<IUserDocument | null>{
+  public async getUserFromCache(key: string): Promise<IUserDocument | null> {
     try {
-      if(!this.client.isOpen){
+      if (!this.client.isOpen) {
         await this.client.connect();
       }
       // Return user from a cache
-      const response: IUserDocument = await this.client.HGETALL(`users:${key}`) as unknown as IUserDocument;
+      const response: IUserDocument = (await this.client.HGETALL(`users:${key}`)) as unknown as IUserDocument;
       console.log(response);
       // Apply parse JSON method to convert some properties from string to {}
       response.createdAt = new Date(Helpers.parseJson(`${response.createdAt}`));
@@ -130,5 +128,4 @@ export class UserCache extends BaseCache {
       throw new ServerError('Server error. Try again.');
     }
   }
-
 }

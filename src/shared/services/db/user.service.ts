@@ -2,9 +2,7 @@ import { IUserDocument } from '@user/interfaces/user.interface';
 import { UserModel } from '@user/models/user.schema';
 import mongoose from 'mongoose';
 
-
 class UserService {
-
   public async addUserData(data: IUserDocument): Promise<void> {
     await UserModel.create(data);
   }
@@ -29,7 +27,6 @@ class UserService {
     return users[0];
   }
 
-
   private aggregateProject() {
     return {
       id: 1,
@@ -53,6 +50,6 @@ class UserService {
       bgImageId: 1,
       profilePicture: 1
     };
-  };
+  }
 }
-  export const userService: UserService = new UserService();
+export const userService: UserService = new UserService();

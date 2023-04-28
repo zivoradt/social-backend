@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import  Jwt  from 'jsonwebtoken';
+import Jwt from 'jsonwebtoken';
 import { config } from '@root/config';
 import { NotAuthorizedError } from './error-handler';
 import { AuthPayload } from '@auth/interfaces/auth.interface';
 
-export class AuthMiddleware{
-
-  public verifyUser(req:Request, _res:Response, next:NextFunction):void{
-    if(!req.session?.jwt){
+export class AuthMiddleware {
+  public verifyUser(req: Request, _res: Response, next: NextFunction): void {
+    if (!req.session?.jwt) {
       throw new NotAuthorizedError('Token is not available. Please login again');
     }
 
@@ -20,12 +19,12 @@ export class AuthMiddleware{
     next();
   }
 
-  public checkAuthentification(req:Request, res:Response, next:NextFunction):void{
-    if(!req.currentUser){
+  public checkAuthentification(req: Request, res: Response, next: NextFunction): void {
+    if (!req.currentUser) {
       throw new NotAuthorizedError('Authentification is required to access this route');
     }
     next();
   }
 }
 
-export const authMiddleware:AuthMiddleware = new AuthMiddleware();
+export const authMiddleware: AuthMiddleware = new AuthMiddleware();
