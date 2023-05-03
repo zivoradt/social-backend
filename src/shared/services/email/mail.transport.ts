@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import Mail from 'nodemailer/lib/mailer';
 import Logger from 'bunyan';
 import sendGridMail from '@sendgrid/mail';
 import { config } from '@root/config';
@@ -27,7 +26,7 @@ class MailTransport {
     }
   }
 
-  private async developmentEmailSender(reciverEmail: string, subject: string, body: string): Promise<void>{
+  private async developmentEmailSender(receiverEmail: string, subject: string, body: string): Promise<void>{
 
   const  transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -41,7 +40,7 @@ class MailTransport {
 
   const mailOptions: IMailOptions = {
     from: `Chatty App <${config.SENDER_EMAIL}>`,
-    to: reciverEmail,
+    to: receiverEmail,
     subject,
     html: body
   };

@@ -7,8 +7,9 @@ import { ExpressAdapter } from '@bull-board/express/dist/ExpressAdapter';
 import {config} from '@root/config';
 import Queue, { Job }  from 'bull';
 import { IAuthJob } from '@auth/interfaces/auth.interface';
+import { IEmailJob } from '@user/interfaces/user.interface';
 
-type IBaseJobData = IAuthJob;
+type IBaseJobData = IAuthJob | IEmailJob;
 
 let bullAdapters: BullAdapter[] = [];
 
