@@ -16,6 +16,14 @@ jest.mock('@global/helpers/cloudinary-upload');
 
 describe('Signup', ()=>{
 
+  beforeEach(()=>{
+    jest.resetAllMocks();
+  });
+
+  afterEach(()=>{
+    jest.clearAllMocks();
+  });
+
   it('should throw error if username is not available', ()=>{
     const req: Request = authMockRequest({}, {
       username: '',
