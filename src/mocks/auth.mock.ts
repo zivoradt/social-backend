@@ -70,8 +70,8 @@ export const authUserPayload: AuthPayload = {
 export const authMock = {
   _id: '60263f14648fed5246e322d3',
   uId: '1621613119252066',
-  username: 'Manny',
-  email: 'manny@me.com',
+  username: 'zivorad',
+  email: 'zivoradtrickovic@gmail.com',
   avatarColor: '#9c27b0',
   createdAt: '2022-08-31T07:42:24.451Z',
   save: () => {},
