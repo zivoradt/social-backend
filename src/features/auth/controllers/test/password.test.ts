@@ -6,10 +6,10 @@ import { CustomError } from '@global/helpers/error-handler';
 import { emailQueue } from '@services/queues/email.queue';
 import { authService } from '@services/db/auth.service';
 
-const WRONG_EMAIL = 'test@email.com';
-const CORRECT_EMAIL = 'manny@me.com';
+const WRONG_EMAIL = 'zivorad@email.com';
+const CORRECT_EMAIL = 'zivoradtrickovic@gmail.com';
 const INVALID_EMAIL = 'test';
-const CORRECT_PASSWORD = 'manny';
+const CORRECT_PASSWORD = '12345';
 
 jest.mock('@services/queues/base.queue');
 jest.mock('@services/queues/email.queue');
@@ -35,7 +35,7 @@ describe('Password', () => {
       });
     });
 
-    it('should throw "Invalid credentials" if email does not exist', () => {
+     it('should throw "Invalid credentials" if email does not exist', () => {
       const req: Request = authMockRequest({}, { email: WRONG_EMAIL }) as Request;
       const res: Response = authMockResponse();
       jest.spyOn(authService, 'getAuthUserByEmail').mockResolvedValue(null as any);

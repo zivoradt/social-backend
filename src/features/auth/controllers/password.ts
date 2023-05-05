@@ -23,7 +23,7 @@ export class Password {
 
     const existingUser: IAuthDocument = await authService.getAuthUserByEmail(email);
     if(!existingUser){
-      throw new BadRequestError('Invalid creditential');
+      throw new BadRequestError('Invalid credentials');
     }
 
     const randomBytes: Buffer = await Promise.resolve(crypto.randomBytes(20));
@@ -36,10 +36,10 @@ export class Password {
     const template: string = forgotPasswordTemplate.passwordResetTemplate(existingUser.username!, resetLink);
     emailQueue.addEmailJob('forgotPasswordEmail', {template, receiverEmail: email, subject: 'Reset youre password'});
 
-    res.status(HTTP_STATUS.OK).json({ message: 'Password reset email is sent.'});
+    res.status(HTTP_STATUS.OK).json({ message: 'Password reset email sent.'});
   }
 
-
+  @joiValidation(passwordSchema)
   public async update(req: Request, res: Response): Promise<void>{
     const { password} = req.body;
     const { token } = req.params;
@@ -65,6 +65,6 @@ export class Password {
     const template: string = resetPasswordTemplate.passwordResetConfirmationTemplate(templateParams);
     emailQueue.addEmailJob('forgotPasswordEmail', {template, receiverEmail: existingUser.email, subject: 'Password reset confirmation.'});
 
-    res.status(HTTP_STATUS.OK).json({ message: 'Password successfully reset.'});
+    res.status(HTTP_STATUS.OK).json({ message: 'Password successfully updated.'});
   }
 };
