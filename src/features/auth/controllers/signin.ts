@@ -7,8 +7,12 @@ import {Response, Request} from 'express';
 import JWT from 'jsonwebtoken';
 import HTTP_STATUS from 'http-status-codes';
 import { config } from '@root/config';
-import { IUserDocument } from '@user/interfaces/user.interface';
+import { IResetPasswordParams, IUserDocument } from '@user/interfaces/user.interface';
 import { userService } from '@services/db/user.service';
+import { emailQueue } from '@services/queues/email.queue';
+import moment from 'moment';
+import publicIp from 'Ip';
+import { resetPasswordTemplate } from '@services/email/templates/reset-password/reset-password-template';
 
 
 
@@ -38,6 +42,7 @@ export class SignIn{
       },
       config.JWT_TOKEN!
     );
+
     req.session = {jwt:userJwt};
 
     const userDocument: IUserDocument = {
