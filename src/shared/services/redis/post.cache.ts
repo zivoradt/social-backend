@@ -5,10 +5,15 @@ import { config } from '@root/config';
 import { ServerError } from '@global/helpers/error-handler';
 import { ObjectId } from 'mongoose';
 import { Helpers } from '@global/helpers/helpers';
-import { IPostDocument, ISavePostToCache } from '@post/interfaces/post.interface';
+import { IPostDocument, IReactions, ISavePostToCache } from '@post/interfaces/post.interface';
+import { number } from 'joi';
+import {  RedisCommand, RedisCommandRawReply, RedisCommandReply } from '@redis/client/dist/lib/commands';
 
 // Created Logger for post cache
 const log: Logger = config.createLogger('postCache');
+
+
+export type PostCacheMultiType = string | number | Buffer | RedisCommandRawReply[] | IPostDocument | IPostDocument[];
 
 
 // Extended base clase for post class to save post to cache
@@ -117,7 +122,52 @@ export class PostCache extends BaseCache {
   }
 
   // Method which will return a post from cache in seted range
-  public async getPostsFromCache(key: string, start: number, end:number): Promise<IPostDocument[]>{
+  public async getPostsFromCache(key: string, start: number, end: number): Promise<IPostDocument[]> {
+
+    try {
+      // Check is client connection is opened
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+      // Taking range of ordered reverse list of posts ID
+      const reply: string[] = await this.client.ZRANGE(key, start, end, { REV: true });
+
+      // Redis method which enable to be saved mulitple commands in same time
+      const multi: ReturnType<typeof this.client.multi> = this.client.multi();
+
+      // Going through range of values and returning post to client
+      for (const value of reply) {
+        multi.HGETALL(`posts:${value}`);
+      }
+
+      // Everything is stored in replies
+      const replies: PostCacheMultiType = await multi.exec() as PostCacheMultiType;
+
+      // Create empty array for post
+      const postReplies: IPostDocument[] = [];
+
+      //Loop through post and cast properties to JSON
+      for (const post of replies as IPostDocument[]) {
+        post.commentsCount = Helpers.parseJson(`${post.commentsCount}`) as number;
+        post.reactions = Helpers.parseJson(`${post.reactions}`) as IReactions;
+        post.createdAt = new Date(Helpers.parseJson(`${post.createdAt}`));
+
+        // Push post to array of posts
+        postReplies.push(post);
+
+      }
+      // Return post
+      return postReplies;
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error. Try again.');
+    }
+  }
+
+
+
+  // Method which will return all post from cache in seted range
+  public async getTotalPostsInCache(): Promise<number> {
 
     try {
       // Check is client connection is opened
@@ -125,7 +175,11 @@ export class PostCache extends BaseCache {
         await this.client.connect();
       }
 
-      return [];
+      // Get total number of post in cache
+      const count: number = await this.client.ZCARD('posts');
+
+      // Return number of posts
+      return count;
     } catch (error) {
       log.error(error);
       throw new ServerError('Server error. Try again.');
