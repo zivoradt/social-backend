@@ -12,7 +12,7 @@ import { RedisCommand, RedisCommandRawReply, RedisCommandReply } from '@redis/cl
 // Created Logger for post cache
 const log: Logger = config.createLogger('postCache');
 
-
+// Created type for retriving data (posts array of elements)
 export type PostCacheMultiType = string | number | Buffer | RedisCommandRawReply[] | IPostDocument | IPostDocument[];
 
 
@@ -163,8 +163,6 @@ export class PostCache extends BaseCache {
       throw new ServerError('Server error. Try again.');
     }
   }
-
-
 
   // Method which will return number of post
   public async getTotalPostsInCache(): Promise<number> {
