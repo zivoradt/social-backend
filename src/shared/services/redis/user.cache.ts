@@ -113,6 +113,7 @@ export class UserCache extends BaseCache {
       // Return user from a cache
       const response: IUserDocument = await this.client.HGETALL(`users:${key}`) as unknown as IUserDocument;
       console.log(response);
+
       // Apply parse JSON method to convert some properties from string to {}
       response.createdAt = new Date(Helpers.parseJson(`${response.createdAt}`));
       response.postsCount = Helpers.parseJson(`${response.postsCount}`);
