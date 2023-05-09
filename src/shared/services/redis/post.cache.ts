@@ -185,7 +185,7 @@ export class PostCache extends BaseCache {
   };
 
   // Method which will return a post with images from cache in seted range
-  public async getPostsWithImages(key: string, start: number, end: number): Promise<IPostDocument[]> {
+  public async getPostsWithImagesFromCache(key: string, start: number, end: number): Promise<IPostDocument[]> {
 
     try {
       // Check is client connection is opened

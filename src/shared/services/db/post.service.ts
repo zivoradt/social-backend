@@ -1,4 +1,3 @@
-import { Helpers } from '@global/helpers/helpers';
 import { IGetPostsQuery, IPostDocument } from '@post/interfaces/post.interface';
 import { PostModel } from '@post/models/post.schema';
 import { IUserDocument } from '@user/interfaces/user.interface';
@@ -43,7 +42,7 @@ class PostService{
   };
 
   // Method that return number of post documents in DB
-  public async postCount(): Promise<number>{
+  public async postsCount(): Promise<number>{
     const count: number = await PostModel.find({}).countDocuments();
     return count;
   }
