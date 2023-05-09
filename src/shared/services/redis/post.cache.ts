@@ -106,8 +106,8 @@ export class PostCache extends BaseCache {
       // Seting post with key value to find and array with post properties
       multi.HSET(`posts:${key}`, dataToSave);
 
+      // Increment post count by one
       const count: number = parseInt(postCount[0], 10) + 1;
-      console.log(count);
 
       // Update post count number in user cache
       multi.HSET(`users:${currentUserId}`, ['postsCount', count]);
@@ -288,6 +288,40 @@ export class PostCache extends BaseCache {
 
       // Return number of users posts
       return count;
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error. Try again.');
+    }
+  }
+
+  // Method which will remove post from cache
+  public async deletePostFromCache(key: string, currentUserId: string): Promise<void> {
+
+    try {
+      // Check is client connection is opened
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      const postCount: string[] = await this.client.HMGET(`users:${currentUserId}`, 'postsCount');
+      const multi: ReturnType<typeof this.client.multi> = this.client.multi();
+
+      // Delete post from sorted set
+      multi.ZREM('posts', `${key}`);
+
+      // Delete post, comment and reaction from Redis
+      multi.DEL(`posts:${key}`);
+      multi.DEL(`comments:${key}`);
+      multi.DEL(`reactions:${key}`);
+
+       // Decrement post count by one
+       const count: number = parseInt(postCount[0], 10) - 1;
+
+       // Update post count number in user cache
+       multi.HSET(`users:${currentUserId}`, ['postsCount', count]);
+
+       // Execute all command from above
+       multi.exec();
     } catch (error) {
       log.error(error);
       throw new ServerError('Server error. Try again.');

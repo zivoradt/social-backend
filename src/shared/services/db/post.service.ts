@@ -1,8 +1,10 @@
-import { IGetPostsQuery, IPostDocument } from '@post/interfaces/post.interface';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { IQueryDeleted } from './../../../features/post/interfaces/post.interface';
+import { IGetPostsQuery, IPostDocument, IQueryComplete } from '@post/interfaces/post.interface';
 import { PostModel } from '@post/models/post.schema';
 import { IUserDocument } from '@user/interfaces/user.interface';
 import { UserModel } from '@user/models/user.schema';
-import { UpdateQuery } from 'mongoose';
+import { Query, UpdateQuery } from 'mongoose';
 
 
 class PostService{
@@ -45,6 +47,20 @@ class PostService{
   public async postsCount(): Promise<number>{
     const count: number = await PostModel.find({}).countDocuments();
     return count;
+  }
+
+  // Method that delete post from DB
+  public async deletePost(postId: string, userId: string): Promise<void>{
+
+    // Delete post from DB
+    console.log(postId);
+    const deletePost = await PostModel.deleteOne({_id: postId});
+
+    // Add implementation for reactions here
+
+    // Decrement postCount in User collection
+    const decrementPostCount: UpdateQuery<IUserDocument> = await UserModel.updateOne({_id: userId}, {$inc: {postsCount: -1}});
+
   }
 
 

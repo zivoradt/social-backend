@@ -27,7 +27,7 @@ describe('Get', () => {
       jest.spyOn(PostCache.prototype, 'getTotalPostsInCache').mockResolvedValue(1);
 
       await Get.prototype.posts(req, res);
-      expect(PostCache.prototype.getPostsFromCache).toHaveBeenCalledWith('post', 0, 10);
+      expect(PostCache.prototype.getPostsFromCache).toHaveBeenCalledWith('posts', 0, 10);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'All posts',
@@ -79,7 +79,7 @@ describe('Get', () => {
       jest.spyOn(PostCache.prototype, 'getPostsWithImagesFromCache').mockResolvedValue([postMockData]);
 
       await Get.prototype.postsWithImages(req, res);
-      expect(PostCache.prototype.getPostsWithImagesFromCache).toHaveBeenCalledWith('post', 0, 10);
+      expect(PostCache.prototype.getPostsWithImagesFromCache).toHaveBeenCalledWith('posts', 0, 10);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'All posts with images',
