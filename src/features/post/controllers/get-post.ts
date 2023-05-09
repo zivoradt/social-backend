@@ -1,17 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { CurrentUser } from './../../auth/controllers/current-user';
-import { joiValidation } from '@global/decorators/joi-validation.decorators';
 import HTTP_STATUS from 'http-status-codes';
 import { Request, Response } from 'express';
-import { postSchema, postWithImageSchema } from '@post/schemas/post.schemes';
-import { ObjectId } from 'mongodb';
 import { IPostDocument } from '@post/interfaces/post.interface';
 import {  PostCache } from '@services/redis/post.cache';
-import { socketIOPostObject } from '@sockets/post';
-import { postQueue } from '@services/queues/post.queue';
-import { UploadApiResponse } from 'cloudinary';
-import { BadRequestError } from '@global/helpers/error-handler';
-import { uploads } from '@global/helpers/cloudinary-upload';
 import { postService } from '@services/db/post.service';
 
 const postCache: PostCache = new PostCache();
@@ -46,7 +36,7 @@ export class Get{
     // If data is empty from cache it return it from DB
     else{
       posts = await postService.getPosts({}, skip, limit, {createdAt: -1});
-      totalPosts = await postService.postCount();
+      totalPosts = await postService.postsCount();
     }
 
     res.status(HTTP_STATUS.OK).json({message: 'All posts', posts: posts, totalPosts: totalPosts});
@@ -67,7 +57,7 @@ export class Get{
     let posts: IPostDocument[] = [];
 
     // Get post from cache with start and end
-    const cachedPosts: IPostDocument[] = await postCache.getPostsWithImages('posts', newSkip, limit);
+    const cachedPosts: IPostDocument[] = await postCache.getPostsWithImagesFromCache('posts', newSkip, limit);
 
     posts = cachedPosts.length ? cachedPosts: await postService.getPosts({imgId: '$ne', gifUrl: '$ne'}, skip, limit, {createdAt: -1});
 
