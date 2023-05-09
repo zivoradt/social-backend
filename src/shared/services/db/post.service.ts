@@ -1,3 +1,4 @@
+import { updatedPost } from './../../../mocks/post.mock';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { IQueryDeleted } from './../../../features/post/interfaces/post.interface';
 import { IGetPostsQuery, IPostDocument, IQueryComplete } from '@post/interfaces/post.interface';
@@ -53,7 +54,6 @@ class PostService{
   public async deletePost(postId: string, userId: string): Promise<void>{
 
     // Delete post from DB
-    console.log(postId);
     const deletePost = await PostModel.deleteOne({_id: postId});
 
     // Add implementation for reactions here
@@ -61,6 +61,12 @@ class PostService{
     // Decrement postCount in User collection
     const decrementPostCount: UpdateQuery<IUserDocument> = await UserModel.updateOne({_id: userId}, {$inc: {postsCount: -1}});
 
+  }
+
+  // Method that update post in DB
+  public async editPost(postId: string, updatedPost: IPostDocument): Promise<void>{
+    // Update post
+     await PostModel.updateOne({_id: postId}, {$set: updatedPost});
   }
 
 

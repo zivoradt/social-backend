@@ -3,11 +3,10 @@ import { BaseCache } from '@services/redis/base.cache';
 import Logger from 'bunyan';
 import { config } from '@root/config';
 import { ServerError } from '@global/helpers/error-handler';
-import { ObjectId } from 'mongoose';
 import { Helpers } from '@global/helpers/helpers';
 import { IPostDocument, IReactions, ISavePostToCache } from '@post/interfaces/post.interface';
-import { number } from 'joi';
-import { RedisCommand, RedisCommandRawReply, RedisCommandReply } from '@redis/client/dist/lib/commands';
+
+import { RedisCommandRawReply } from '@redis/client/dist/lib/commands';
 
 // Created Logger for post cache
 const log: Logger = config.createLogger('postCache');
@@ -45,49 +44,39 @@ export class PostCache extends BaseCache {
       createdAt
     } = createdPost;
 
-
-    // Converting properties to string to be able to be saved to cache
-    const firstList: string[] = [
-      '_id',
-      `${_id}`,
-      'userId',
-      `${userId}`,
-      'username',
-      `${username}`,
-      'email',
-      `${email}`,
-      'avatarColor',
-      `${avatarColor}`,
-      'profilePicture',
-      `${profilePicture}`,
-      'post',
-      `${post}`,
-      'bgColor',
-      `${bgColor}`,
-      'feelings',
-      `${feelings}`,
-      'privacy',
-      `${privacy}`,
-      'gifUrl',
-      `${gifUrl}`
-    ];
-
-    // Converting properties to string and from object to string to be able to be saved to cache
-    const secondList: string[] = [
-      'commentsCount',
-      `${commentsCount}`,
-      'reactions',
-      JSON.stringify(reactions),
-      'imgVersion',
-      `${imgVersion}`,
-      'imgId',
-      `${imgId}`,
-      'createdAt',
-      `${createdAt}`
-    ];
-
-    // Adding both list to one array
-    const dataToSave: string[] = [...firstList, ...secondList];
+    const dataToSave = {
+      '_id': `${_id}`,
+      'userId':
+        `${userId}`,
+      'username':
+        `${username}`,
+      'email':
+        `${email}`,
+      'avatarColor':
+        `${avatarColor}`,
+      'profilePicture':
+        `${profilePicture}`,
+      'post':
+        `${post}`,
+      'bgColor':
+        `${bgColor}`,
+      'feelings':
+        `${feelings}`,
+      'privacy':
+        `${privacy}`,
+      'gifUrl':
+        `${gifUrl}`,
+      'commentsCount':
+        `${commentsCount}`,
+      'reactions':
+        JSON.stringify(reactions),
+      'imgVersion':
+        `${imgVersion}`,
+      'imgId':
+        `${imgId}`,
+      'createdAt':
+        `${createdAt}`
+    };
 
     try {
       // Check is client connection is opened
@@ -104,13 +93,18 @@ export class PostCache extends BaseCache {
       // Created sorted set in Reddis
       multi.ZADD('posts', { score: parseInt(uId, 10), value: `${key}` });
       // Seting post with key value to find and array with post properties
-      multi.HSET(`posts:${key}`, dataToSave);
+
+      // Loop through dataToSave object and set properties in Reddis
+      for (const [itemKey, itemValue] of Object.entries(dataToSave)) {
+        // Save data to Reddis
+        multi.HSET(`posts:${key}`, `${itemKey}`, `${itemValue}`);
+      }
 
       // Increment post count by one
       const count: number = parseInt(postCount[0], 10) + 1;
 
       // Update post count number in user cache
-      multi.HSET(`users:${currentUserId}`, ['postsCount', count]);
+      multi.HSET(`users:${currentUserId}`, 'postsCount', count);
 
       // Executed all command to Reddis
       multi.exec();
@@ -314,14 +308,69 @@ export class PostCache extends BaseCache {
       multi.DEL(`comments:${key}`);
       multi.DEL(`reactions:${key}`);
 
-       // Decrement post count by one
-       const count: number = parseInt(postCount[0], 10) - 1;
+      // Decrement post count by one
+      const count: number = parseInt(postCount[0], 10) - 1;
 
-       // Update post count number in user cache
-       multi.HSET(`users:${currentUserId}`, ['postsCount', count]);
+      // Update post count number in user cache
+      multi.HSET(`users:${currentUserId}`, 'postsCount', count);
 
-       // Execute all command from above
-       multi.exec();
+      // Execute all command from above
+      multi.exec();
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error. Try again.');
+    }
+  }
+
+  // Update post
+  public async updatePostInCache(key: string, updatedPost: IPostDocument): Promise<IPostDocument> {
+
+    // Extract properties which need to updated
+    const { post, bgColor, feelings, privacy, gifUrl, imgVersion, imgId, profilePicture } = updatedPost;
+
+    const dataToSave = {
+      'post':
+        `${post}`,
+      'bgColor':
+        `${bgColor}`,
+      'feelings':
+        `${feelings}`,
+      'privacy':
+        `${privacy}`,
+      'gifUrl':
+        `${gifUrl}`,
+      'imgVersion':
+        `${imgVersion}`,
+      'imgId':
+        `${imgId}`,
+      'profilePicture': `${profilePicture}`,
+    };
+
+    try {
+      // Check is client connection is opened
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+      const multi: ReturnType<typeof this.client.multi> = this.client.multi();
+      for (const [itemKey, itemValue] of Object.entries(dataToSave)) {
+        // Save data to Reddis
+        await this.client.HSET(`posts:${key}`, `${itemKey}`, `${itemValue}`);
+      }
+
+      // Get all properties from postId key
+      multi.HGETALL(`posts:${key}`);
+
+      // Get response in reply
+      const reply: PostCacheMultiType = await multi.exec() as PostCacheMultiType;
+
+      // Forward to postReply and cast it as IPostObject
+      const postReply = reply as IPostDocument[];
+
+      postReply[0].commentsCount = Helpers.parseJson(`${postReply[0].commentsCount}`) as number;
+      postReply[0].reactions = Helpers.parseJson(`${postReply[0].reactions}`) as IReactions;
+      postReply[0].createdAt = new Date(Helpers.parseJson(`${postReply[0].createdAt}`)) as Date;
+
+      return postReply[0];
     } catch (error) {
       log.error(error);
       throw new ServerError('Server error. Try again.');
