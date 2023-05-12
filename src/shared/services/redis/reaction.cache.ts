@@ -59,6 +59,7 @@ export class ReactionCache extends BaseCache {
       // Execute all commands
       await multi.exec();
 
+      // update post reactions
       const dataToSave: string[] = ['reactions', JSON.stringify(postReaction)];
       await this.client.HSET(`posts:${key}`, dataToSave);
 
