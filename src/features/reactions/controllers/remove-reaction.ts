@@ -12,7 +12,7 @@ export class Remove {
     const { postId, previousReaction, postReaction} =  req.params;
 
     // Remove reaction from cache
-    //await reactionCache.removePostReactionFromCache(postId, req.currentUser!.username, JSON.parse(postReaction));
+    await reactionCache.removePostReactionFromCache(postId, req.currentUser!.username, JSON.parse(postReaction));
 
     // Create databaseReactionData to remove from DB
     const databaseReactionData: IReactionJob = {

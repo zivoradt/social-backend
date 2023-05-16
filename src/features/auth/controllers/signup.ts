@@ -23,7 +23,7 @@ const userCache: UserCache = new UserCache();
 
 export class SignUp {
 
-  @joiValidation(signupSchema)
+
   public async create(req: Request, res: Response): Promise<void> {
     const { username, email, password, avatarColor, avatarImage } = req.body;
     const checkIfUserExist: IAuthDocument = await authService.getUserByUsernameOrEmail(username, email);

@@ -27,9 +27,11 @@ export class ReactionCache extends BaseCache {
       }
 
       if(type){
+        // Push reaction to Redis field reactions
         await this.client.LPUSH(`reactions:${key}`, JSON.stringify(reaction));
-        const dataToSave: string[] = ['reactions', JSON.stringify(postReaction)];
-        await this.client.HSET(`posts:${key}`, dataToSave);
+
+        // Update the post field in Redis
+        await this.client.HSET(`posts:${key}`, 'reactions', JSON.stringify(postReaction));
       }
 
     } catch (error) {
@@ -59,10 +61,64 @@ export class ReactionCache extends BaseCache {
       // Execute all commands
       await multi.exec();
 
-      // update post reactions
-      const dataToSave: string[] = ['reactions', JSON.stringify(postReaction)];
-      await this.client.HSET(`posts:${key}`, dataToSave);
+      // Update post reactions
+      await this.client.HSET(`posts:${key}`, 'reactions', JSON.stringify(postReaction));
 
+
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error');
+    }
+  }
+
+   public async getReactionsFromCache(postId: string): Promise<[IReactionDocument[], number]> {
+    try {
+      if(!this.client.isOpen){
+        await this.client.connect();
+      }
+      // Get number of reaction on one post
+      const reactionCount: number = await this.client.LLEN(`reactions:${postId}`);
+
+      // List of reaction
+      const response: string[] = await this.client.LRANGE(`reactions:${postId}`, 0, -1);
+
+      const list: IReactionDocument[] = [];
+
+      for(const item of response){
+        list.push(Helpers.parseJson(item));
+      }
+
+      return list.length ? [list, reactionCount] : [[], 0];
+
+    } catch (error) {
+      log.error(error);
+      throw new ServerError('Server error');
+    }
+  }
+
+  public async getSingleReactionByUsernameFromCache(postId: string, username: string): Promise<[IReactionDocument, number] | []> {
+    try {
+      if(!this.client.isOpen){
+        await this.client.connect();
+      }
+
+
+      // List of reaction
+      const response: string[] = await this.client.LRANGE(`reactions:${postId}`, 0, -1);
+
+      // Initiate empty list
+      const list: IReactionDocument[] = [];
+
+      // Parse to JSON
+      for(const item of response){
+        list.push(Helpers.parseJson(item));
+      }
+
+      const result: IReactionDocument = find(list, (listItem: IReactionDocument)=>{
+        return listItem?.postId === postId && listItem?.username === username;
+      }) as IReactionDocument;
+
+      return result ? [result, 1] : [];
 
     } catch (error) {
       log.error(error);
