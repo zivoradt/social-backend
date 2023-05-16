@@ -17,7 +17,7 @@ import { resetPasswordTemplate } from '@services/email/templates/reset-password/
 
 
 export class SignIn{
-  @joiValidation(loginSchema)
+
   public async read(req: Request, res:Response):Promise<void>{
     const {username, password} = req.body;
     const existingUser: IAuthDocument = await authService.getAuthUserByUsername(username);
